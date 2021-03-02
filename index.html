@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>ウェッピィくん</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Image format converter">
+    <script src="https://cdn.jsdelivr.net/npm/vue" type="text/javascript"></script>
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>ウェッピィくん</h1>
+
+      <input type="file" @change="load">
+
+      <div v-if="img">
+        <div>元サイズ: {{ originalSize | sizeUnit }}</div>
+        w: <input type="number" v-model="w">
+        h: <input type="number" v-model="h">
+        <label><input type="checkbox" v-model="keepRatio"> アス比維持</label>
+        <select v-model="type">
+          <option value="image/webp">WEBP</option>
+          <option value="image/png">PNG</option>
+          <option value="image/jpeg">JPG</option>
+        </select>
+        <button @click="render">カモン！</button>
+      </div>
+
+      <div v-if="result">
+        <div>サイズ: {{ size | sizeUnit }}</div>
+        <img :src="result">
+      </div>
+    </div>
+
+    <script>
+var vm = new Vue({
+    el: "#app",
+    data: {
+        img: false,
+        w: 0,
+        h: 0,
+        keepRatio: true,
+        type: "image/webp",
+        result: null,
+    },
+    filters: {
+        sizeUnit: function (size) {
+            return size > 1000000000 ? (
+                size / 1000000000 + "GB (" + size / 1024 / 1024 / 1024 + "GiB)"
+            ) : size > 1000000 ? (
+                size / 1000000 + "MB (" + size / 1024 / 1024 + "MiB)"
+            ) : size > 1000 ? (
+                size / 1000 + "KB (" + size / 1024 + "KiB)"
+            ) : (
+                size + "Bytes"
+            );
+        }
+    },
+    computed: {
+        size: function () {
+            var ix = vm.result && vm.result.indexOf(",");
+            return (!ix || ix < 0) ? 0 : Math.ceil((vm.result.length - ix - 1) / 4.0 * 3)
+        },
+        originalSize: function () {
+            var ix = vm.img && vm.img.src.indexOf(",");
+            return (!ix || ix < 0) ? 0 : Math.ceil((vm.img.src.length - ix - 1) / 4.0 * 3)
+        },
+    },
+    watch: {
+        w: function () {
+            if (vm.keepRatio) {
+                vm.h = vm.img.naturalHeight * (vm.w / vm.img.naturalWidth);
+            }
+        },
+        h: function () {
+            if (vm.keepRatio) {
+                vm.w = vm.img.naturalWidth * (vm.h / vm.img.naturalHeight);
+            }
+        }
+    },
+    methods: {
+        load: function (e) {
+            vm.img = null;
+            var reader = new FileReader();
+            reader.onload = function () {
+                var img = document.createElement("img");
+                img.onload = function () {
+                    vm.img = img;
+                    vm.w = img.naturalWidth;
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        },
+        render: function () {
+            var canvas = document.createElement("canvas");
+            canvas.width = vm.w;
+            canvas.height = vm.h;
+
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(
+                vm.img,
+                0, 0, vm.img.naturalWidth, vm.img.naturalHeight,
+                0, 0, vm.w, vm.h,
+            );
+            vm.result = canvas.toDataURL(vm.type, 1.0);
+        }
+    }
+});
+    </script>
+  </body>
+
+</html>
