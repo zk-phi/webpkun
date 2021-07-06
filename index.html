@@ -22,16 +22,17 @@
         h: <input type="number" v-model="h">
         <label><input type="checkbox" v-model="keepRatio"> アス比維持</label>
         <select v-model="type">
-          <option value="image/webp">WEBP</option>
+          <option value="image/webp">WebP</option>
           <option value="image/png">PNG</option>
           <option value="image/jpeg">JPG</option>
         </select>
-        <button @click="render">カモン！</button>
+        <button @click="render">変換</button>
       </div>
 
       <div v-if="result">
         <div>サイズ: {{ size | sizeUnit }}</div>
         <img :src="result">
+        <p>右クリックで保存</p>
       </div>
     </div>
 
